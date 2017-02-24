@@ -1,80 +1,47 @@
-function varargout = neuron_stats(timeStamps,channels,binSize,epoch_idx)
-%% neuron_stats(timeStamps,channels,binSize,epoch_idx)
-%   Calculates the spiking statistics of specified channels. Also creates a
-%   plot of spiking stats for the first two channels.
+function varargout = neuron_stats(timeStamps,channels)
+%% neuron_stats(timeStamps,channels)
+%   Calculates the first order spiking statistics on specified channels. 
 % 
 %   timeStamps should be a cell array of spike times {channels x units}
-%   channels is a vector of channels (2 x 1 or 1 x 2)
-%   binSize is a scalar value corresponding to the time of an epoch in secs
-%   epoch_idx is a logical vector that limits correlation measure to
-%       specified bins, 
-%       alternatively, you can input a scalar which is the time of the
-%       lfp signal
+%   channels is a vector of channels
 % 
-% FR = neuron_stats(timeStamps,channels,binSize,epoch_idx)
-%   returns firing rates for each channe
+% FR = neuron_stats(timeStamps,channels)
+%   returns firing rates for each channel
 % 
-% [FR,FF] = neuron_stats(timeStamps,channels,binSize,epoch_idx)
-%   returns firing rates and fano factors for each channels
+% [FR,CV] = neuron_stats(timeStamps,channels)
+%   also returns coefficient of variation for each channel
 % 
-% [FR,FF,R] = neuron_stats(timeStamps,channels,binSize,epoch_idx)
-%   also returns correlation matrix
+% [FR,FF,ISI] = neuron_stats(timeStamps,channels)
+%   also returns interspike intervals for each channel
 
 %% inputs
-narginchk(1,5)
-if ~iscell(timeStamps),
-    error('timeStamps should be a cell array')
-elseif ~isvector(channels),
-    error('channels should be a vector of 2 channels')
-elseif ~isscalar(binSize),
-    error('binSize should be a scalar')
-elseif isscalar(epoch_idx),
-elseif ~islogical(epoch_idx) || ~isvector(epoch_idx),
-    error('epoch_idx should be a logical vector of indices')
-end
+narginchk(1,2)
+assert(iscell(timeStamps),'timeStamps should be a cell array');
+assert(isvector(channels),'channels should be a vector of channels');
 
-%% collect number of spikes on each channel
-if ~isscalar(epoch_idx),
-    bins = (0:binSize:length(epoch_idx)*binSize)';
-else % scalar (epoch_idx is time of lfp signal)
-    bins = (0:binSize:epoch_idx)';
-end
-
-nSpikes = [];
+%% collect spike times on each channel (each ch may have multiple units)
+spikeTimes = cell(length(channels),1);
 for i=1:length(channels),
     ch = channels(i);
-    spikeTimes = [];
     for j=2:3,
-        spikeTimes = cat(2, spikeTimes, timeStamps{ch,j});
+        idx = ~isnan(timeStamps{ch,j});
+        spikeTimes{i} = cat(1, spikeTimes{i}, timeStamps{ch,j}(idx)');
     end
-    [nSpikes(:,i),~] = histcounts(spikeTimes,bins);
 end
 
-%% select bins with epoch_idx
-if ~isscalar(epoch_idx),
-    nSpikes = nSpikes(epoch_idx,:);
-end
-
-%% calc statistics
-FR = mean(nSpikes);
-FF = var(nSpikes) ./ mean(nSpikes);
-R = corr(nSpikes);
-
-%% plot
-if length(channels) > 1,
-    scatter(nSpikes(:,1),nSpikes(:,2)), hold on
-    text(.8*max(nSpikes(:,1)),.8*max(nSpikes(:,2)),...
-        sprintf('r = %.3f',R(1,2)),'FontSize',18)
-    xlabel(sprintf('Spikes (ch%02i)',channels(1)))
-    ylabel(sprintf('Spikes (ch%02i)',channels(2)))
+%% spike train statistics
+for i=1:length(channels),
+    ISI{i} = diff(spikeTimes{i}); % distribution
+    FR{i} = 1 / mean(ISI{i});
+    CV{i} = mean(ISI{i}) / std(ISI{i});
 end
 
 %% output
 varargout{1} = FR;
-if nargout>=2,
-    varargout{2} = FF;
-    if nargout==3,
-        varargout{3} = R;
+if nargout>1,
+    varargout{2} = CV;
+    if nargout>2,
+        varargout{3} = ISI;
     end
 end
 
