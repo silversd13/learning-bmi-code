@@ -26,13 +26,15 @@ for experiment=1%:length(experiments),
     % load baseline session to look at spontaneous activity
     session = experiments(experiment).baseline_session;
     datafile = fullfile(datadir,sprintf('data_block_%s_%s',rat,session));
-    fid = load(datafile,'data','Fs_lfp');
-    N = round(size(fid.data,2) / fid.Fs_lfp);
+    fid = load(datafile,'wave','Fs_wave');
+    N = floor(length(fid.wave)/fid.Fs_wave);
+    win = [0,4];
+    t = (0:win(2):N-win(2))';
     
     % calc firing rates, fano factors, and correlation btw neurons
     fid = load(datafile,'TimeStamps');
     subplot(3,3,2)
-    [FR_base,FF_base,R_base] = neuron_stats(fid.TimeStamps,channels,epochSize, N);
+    [FR_base,FF_base,ISI_base] = neuron_stats(fid.TimeStamps,channels,.1,t,win);
     title('Baseline Correlation')
     if length(channels) > 1,
         r_base = R_base(1,2);
@@ -45,14 +47,15 @@ for experiment=1%:length(experiments),
     % consistent across channels so it's not clear if it will be useful for
     % prediction
     
-    % save relevant variables in mat file
-    saveas(gcf,fullfile(savedir,name),'fig')
-    print(gcf,fullfile(savedir,name),'-dpdf','-bestfit')
-    save(fullfile(savedir,name),...
-        'tstart','treward','beta','learning_fun','channels','epochSize',...
-        'sleep_idx','r_sleep','r_awake','r_base',...
-        'FR_sleep','FF_sleep','FR_awake','FF_awake','FR_base','FF_base',...
-        'r_task','rta_early','rta_late','trial_rates')
+%     % save relevant variables in mat file
+%     saveas(gcf,fullfile(savedir,name),'fig')
+%     print(gcf,fullfile(savedir,name),'-dpdf','-bestfit')
+%     save(fullfile(savedir,name),...
+%         'tstart','treward','beta','learning_fun','channels','epochSize',...
+%         'sleep_idx','r_sleep','r_awake','r_base',...
+%         'FR_sleep','FF_sleep','FR_awake','FF_awake','FR_base','FF_base',...
+%         'r_task','rta_early','rta_late','trial_rates')
+
 end % experiments
 
 

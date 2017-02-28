@@ -4,10 +4,10 @@ epochSize = 4; % seconds
 datadir = '/Volumes/data/RatBMI/data';
 
 experiments = get_experiments();
-for experiment=1%:length(experiments),
+for experiment=4%:length(experiments),
     
     % make sure directories for saving exists
-    savedir = fullfile('Users','daniel','Projects','LearningBMI','processed');
+    savedir = fullfile('~','Projects','LearningBMI','processed');
     if ~exist(savedir,'dir'),
         mkdir(savedir)
     end
@@ -31,7 +31,8 @@ for experiment=1%:length(experiments),
         
         subplot(3,3,1)
         sleep_idx = get_sleep_epochs(fid.data',fid.Fs_lfp,epochSize);
-        
+        pks = find_slow_oscillations(fid.data',fid.Fs_lfp,epochSize,sleep_idx);
+                
         % calc firing rates, fano factors, and correlation btw neurons
         fid = load(datafile,'TimeStamps');
         subplot(3,3,4)
@@ -57,13 +58,14 @@ for experiment=1%:length(experiments),
         FF_awake = [];
     end
     
-    % save relevant variables in mat file
-    saveas(gcf,fullfile(savedir,name),'fig')
-    print(gcf,fullfile(savedir,name),'-dpdf','-bestfit')
-    save(fullfile(savedir,name),...
-        'tstart','treward','beta','learning_fun','channels','epochSize',...
-        'sleep_idx','r_sleep','r_awake','r_base',...
-        'FR_sleep','FF_sleep','FR_awake','FF_awake','FR_base','FF_base',...
-        'r_task','rta_early','rta_late','trial_rates')
+%     % save relevant variables in mat file
+%     saveas(gcf,fullfile(savedir,name),'fig')
+%     print(gcf,fullfile(savedir,name),'-dpdf','-bestfit')
+%     save(fullfile(savedir,name),...
+%         'tstart','treward','beta','learning_fun','channels','epochSize',...
+%         'sleep_idx','r_sleep','r_awake','r_base',...
+%         'FR_sleep','FF_sleep','FR_awake','FF_awake','FR_base','FF_base',...
+%         'r_task','rta_early','rta_late','trial_rates')
+    
 end % experiments
 
