@@ -31,7 +31,7 @@ for experiment=4%:length(experiments),
         
         subplot(3,3,1)
         sleep_idx = get_sleep_epochs(fid.data',fid.Fs_lfp,epochSize);
-        pks = find_slow_oscillations(fid.data',fid.Fs_lfp,epochSize,sleep_idx);
+        pks = find_so_pks(fid.data',fid.Fs_lfp,epochSize,sleep_idx);
                 
         % calc firing rates, fano factors, and correlation btw neurons
         fid = load(datafile,'TimeStamps');

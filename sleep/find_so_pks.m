@@ -1,18 +1,18 @@
-function varargout = find_slow_oscillations(lfp,Fs,window,sleep_idx)
-%% find_slow_oscillations(lfp)
+function varargout = find_so_pks(lfp,Fs,window,sleep_idx)
+%% find_so_pks(lfp)
 %   lfp should be a vector or matrix (samples x channels)
 %   produces a plot of the lfp data where epochs are classified as sleep or
 %   awake
 %   classification is done by looking at the avg pwr in delta and gamma
 %   bands (via hilbert method) then clustered using K-Means alg
 % 
-% find_slow_oscillations(lfp,Fs)
+% find_so_pks(lfp,Fs)
 %   Fs is the sample rate of lfp (default is 24414.0625 / 24)
 % 
-% find_slow_oscillations(lfp,Fs,window)
+% find_so_pks(lfp,Fs,window)
 %   win is the size of the epochs in secs (default is 4 secs)
 % 
-% idx = find_slow_oscillations(lfp,...)
+% idx = find_so_pks(lfp,...)
 %   also returns indices 
 %       1 = sleep
 %       0 = awake
