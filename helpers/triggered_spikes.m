@@ -38,11 +38,13 @@ for ch=1:length(events), % each channel
             for e=1:E, % bin around each event
                 [spks(e,:),~] = histcounts(spikeTimes,bins+events{ch}(e));
             end
-            % output
-            unit = unit + 1;
-            raster{unit}.unit = unit;
-            raster{unit}.ch = ch;
-            raster{unit}.spks = spks;
+            % output if avg rate > 1Hz
+            if mean(spks(:))/binSize > 1,
+                unit = unit + 1;
+                raster{unit}.unit = unit;
+                raster{unit}.ch = ch;
+                raster{unit}.spks = spks;
+            end
         end
     end
 end
