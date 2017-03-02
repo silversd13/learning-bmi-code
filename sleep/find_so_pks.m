@@ -57,24 +57,36 @@ for ch=1:size(lfp_delta,2),
 
     % find peaks on each channel
     [~,pks_idx{ch}] = findpeaks(sleep,'MinPeakHeight',thresh);
+    pks_idx{ch} = [nan;pks_idx{ch};nan];
     
     % find troughs in either direction
     nxt_idx{ch} = nan(size(pks_idx{ch}));
     prv_idx{ch} = nan(size(pks_idx{ch}));
-    for i=1:length(pks_idx{ch}),
-        idx = 2:pks_idx{ch}(i);
+    for i=2:length(pks_idx{ch})-1,
+        idx = max([2,pks_idx{ch}(i-1)]):pks_idx{ch}(i);
         prv_idx{ch}(i) = max([1,idx(1)+find(sleep(idx-1)>sleep(idx),1,'last')+1]);
-        idx = pks_idx{ch}(i):length(sleep)-1;
+        idx = pks_idx{ch}(i):min([pks_idx{ch}(i+1),length(sleep)-1]);
         nxt_idx{ch}(i) = min([idx(1)+find(sleep(idx+1)>sleep(idx),1)-1,length(sleep)]);
     end
 end
+
+%% convert from indices to times
+pks = cell(size(lfp_delta,2),1);
+prv = cell(size(lfp_delta,2),1);
+nxt = cell(size(lfp_delta,2),1);
+for ch=1:size(lfp_delta,2),
+    pks{ch} = time(pks_idx{ch}(~isnan(pks_idx{ch})));
+    prv{ch} = time(prv_idx{ch}(~isnan(prv_idx{ch})));
+    nxt{ch} = time(nxt_idx{ch}(~isnan(nxt_idx{ch})));
+end
+
 %% output
 if nargout>0,
-    varargout{1} = time(pks_idx);
+    varargout{1} = pks;
     if nargout>1,
-        varargout{2} = time(prv_idx);
+        varargout{2} = prv;
         if nargout>2,
-            varargout{3} = time(nxt_idx);
+            varargout{3} = nxt;
         end
     end
 end
