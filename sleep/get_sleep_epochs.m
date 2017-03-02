@@ -70,16 +70,40 @@ Xr_gamma = mean(abs(hilbert(lfp_gamma)),2);
 delta = mean(reshape(Xr_delta(1:N),rows,cols))';
 gamma = mean(reshape(Xr_gamma(1:N),rows,cols))';
 
-%% do K-means to get indices of sleep
+%% do gaussian mixture model to get indices of sleep
 obj = fitgmdist([delta,gamma],2);
 ctr = obj.mu;
 idx = cluster(obj,[delta,gamma]);
 
-if ctr(1,1)>ctr(2,1), % higher delta power
+if ctr(1,1)>ctr(2,1), % higher delta power = sleep
     sleep_idx = idx==1;
 else
     sleep_idx = idx==2;
 end
+
+%% must have at least 2 sleep epochs in a row to count as sleep
+tmp = cat(1,sleep_idx,0);
+tmp = cat(1,0,tmp);
+idx0 = 2:length(tmp)-1;
+idx_1 = idx0 - 1;
+idx1 = idx0 + 1;
+
+sleep_idx = tmp(idx0)==1 & (...
+    (tmp(idx_1)==1)  | ...
+    (tmp(idx1)==1)   );
+
+%% must have at least 2 awake epochs in a row to count as awake
+awake_idx = ~sleep_idx;
+tmp = cat(1,awake_idx,0);
+tmp = cat(1,0,tmp);
+idx0 = 2:length(tmp)-1;
+idx_1 = idx0 - 1;
+idx1 = idx0 + 1;
+
+awake_idx = tmp(idx0)==1 & (...
+    (tmp(idx_1)==1)  | ...
+    (tmp(idx1)==1)   );
+sleep_idx = ~awake_idx;
 
 %% plot
 gscatter(delta,gamma,sleep_idx), hold on
